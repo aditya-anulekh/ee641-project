@@ -127,3 +127,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Dev added files
+*.pkl
+.idea/
+.vscode/
