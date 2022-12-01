@@ -24,6 +24,7 @@ def generate_questions_csv(questions_file, annotations_file):
         # Create a dictionary to store questions and answers
         row = {'image_id': questions_data['questions'][i]['image_id'],
                'question_id': questions_data['questions'][i]['question_id'],
+               'question_type': annotations_data['annotations'][i]['question_type'],
                'question': questions_data['questions'][i]['question'],
                'most_picked_answer': annotations_data['annotations'][i][
                    'multiple_choice_answer'],
