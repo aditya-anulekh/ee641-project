@@ -13,7 +13,6 @@ class QuestionEncoderLSTM(nn.Module):
                  num_hidden_units=512,
                  ):
         super(QuestionEncoderLSTM, self).__init__()
-        # TODO: Fix embedding size
         self.embedding = nn.Embedding(question_vocab_size, word_embedding_size)
         self.tanh = nn.Tanh()
         self.lstm = nn.LSTM(input_size=word_embedding_size,

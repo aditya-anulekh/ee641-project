@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
-from image_encoder import ImageEncoder
-from question_encoder import (
+from .image_encoder import ImageEncoder
+from .question_encoder import (
     QuestionEncoderLSTM,
     QuestionEncoderTransformer
 )
@@ -10,7 +10,7 @@ from question_encoder import (
 class VQAModel(nn.Module):
     def __init__(self,
                  image_encoder=ImageEncoder(),
-                 question_encoder=QuestionEncoderLSTM(),
+                 question_encoder=QuestionEncoderLSTM(2420),
                  dropout_p=0.5,
                  fusion_hidden_units=1000,
                  n_answers=1000,
@@ -20,7 +20,8 @@ class VQAModel(nn.Module):
         self.question_encoder = question_encoder
         self.tanh = nn.Tanh()
         self.dropout = nn.Dropout(dropout_p)
-        self.fc1 = nn.Linear(self.image_encoder, fusion_hidden_units)
+        self.fc1 = nn.Linear(self.image_encoder.embedding_size,
+                             fusion_hidden_units)
         self.fc2 = nn.Linear(fusion_hidden_units, n_answers)
         pass
 
@@ -37,5 +38,5 @@ class VQAModel(nn.Module):
         return fused_features
 
 
-if  __name__ == '__main__':
+if __name__ == '__main__':
     pass

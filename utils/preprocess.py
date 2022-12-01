@@ -72,7 +72,7 @@ def generate_answers_vocab(dataset_df: pd.DataFrame,
     top_answers = top_answers.tolist()
     top_answers.sort()
     top_answers.insert(0, '<unk>')
-    top_answers = top_answers[:num_answers - 1]
+    top_answers = top_answers[:num_answers]
     with open(f'../answers_vocabulary_{phase}.txt', 'w') as f:
         f.writelines([f"{ans}\n" for ans in top_answers])
     return top_answers
@@ -110,6 +110,9 @@ class Vocabulary:
         sentence = SENTENCE_SPLIT_REGEX.split(sentence)
         words = [w.strip() for w in sentence if len(w.strip()) > 0]
         return [self.word2idx(word) for word in words]
+
+    def __call__(self, sentence, *args, **kwargs):
+        return self.tokenize_input(sentence)
 
     @staticmethod
     def load_lines(file_path):
