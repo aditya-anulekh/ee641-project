@@ -132,3 +132,6 @@ dmypy.json
 *.pkl
 .idea/
 .vscode/
+*scratchpad.ipynb
+answers_vocabulary.txt
+questions_vocabulary.txt
