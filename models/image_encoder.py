@@ -10,16 +10,17 @@ import config
 class ImageEncoder(nn.Module):
     def __init__(self, base_model=vgg19, embedding_size=1024, **kwargs):
         super(ImageEncoder, self).__init__()
-        self.base_model = base_model(**kwargs)
+        base_model = base_model(**kwargs)
         self.embedding_size = embedding_size
 
-        # Get the number of input features
-        in_features = self.base_model.classifier[-1].in_features
+        # Get the number of input features to the classifier layer
+        in_features = base_model.classifier[-1].in_features
 
         # Set the output layer to None
-        self.base_model.classifier = nn.Sequential(
-            *list(self.base_model.classifier.children())[:-1]
+        base_model.classifier = nn.Sequential(
+            *list(base_model.classifier.children())[:-1]
         )
+        self.base_model = base_model
         self.fc = nn.Linear(in_features, embedding_size)
 
     def forward(self, x):

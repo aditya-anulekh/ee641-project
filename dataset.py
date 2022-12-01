@@ -6,18 +6,25 @@ from torch.utils.data import Dataset
 from torchvision import transforms, io
 from PIL import Image
 import config
+from utils.preprocess import Vocabulary
 
 
 class VQADataset(Dataset):
     def __init__(self,
                  image_dir_root,
                  questions_file,
+                 questions_vocab_file,
+                 answers_vocab_file,
                  transform=None,
                  phase='train'):
         self.image_dir_root = image_dir_root
         self.questions_file = questions_file
         self.transform = transform
         self.phase = phase
+        self.question_vocab = Vocabulary(questions_vocab_file)
+        with open(answers_vocab_file, 'r') as f:
+            self.answers_master = f.readlines()
+        self.answers_master = [ans.strip() for ans in self.answers_master]
 
         self.questions = pd.read_pickle(questions_file)
 
@@ -35,7 +42,12 @@ class VQADataset(Dataset):
 
         # Get the question and answers
         question = row['question']
+        print(question)
+        question = self.question_vocab.tokenize_input(question)
         answer = row['most_picked_answer']
+        print(answer)
+        if answer not in self.answers_master:
+            answer = '<unk>'
 
         # Get the path of the image corresponding to the question
         image = os.path.join(
@@ -44,7 +56,7 @@ class VQADataset(Dataset):
         )
 
         # Convert image to RGB
-        image = np.array(Image.open(image).convert("RGB"))
+        image = Image.open(image).convert("RGB")
 
         if self.transform:
             image = self.transform(image)
@@ -53,6 +65,11 @@ class VQADataset(Dataset):
 
 if __name__ == '__main__':
     image_dir = os.path.join(config.DATASET_ROOT, 'train2014')
-    questions_file = './questions.pkl'
-    vqadataset = VQADataset(image_dir, questions_file)
+    questions_file = './questions_subset_train.pkl'
+    questions_vocab_file = './questions_vocabulary_train.txt'
+    answers_vocab_file = './answers_vocabulary_train.txt'
+    vqadataset = VQADataset(image_dir,
+                            questions_file,
+                            questions_vocab_file,
+                            answers_vocab_file)
     print(vqadataset.__getitem__(10))
