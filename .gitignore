@@ -133,5 +133,5 @@ dmypy.json
 .idea/
 .vscode/
 *scratchpad.ipynb
-answers_vocabulary.txt
-questions_vocabulary.txt
+answers_vocabulary*.txt
+questions_vocabulary*.txt
