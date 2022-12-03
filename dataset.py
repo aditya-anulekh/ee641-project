@@ -1,10 +1,11 @@
 import os
+import re
 import pandas as pd
 import torch
 from torch.utils.data import Dataset
 from PIL import Image
 import config
-from utils.preprocess import Vocabulary
+from utils.preprocess import Vocabulary, get_question_length
 
 
 class VQADataset(Dataset):
@@ -30,10 +31,15 @@ class VQADataset(Dataset):
                                enumerate(self.answers_master)}
 
         self.questions = pd.read_pickle(questions_file)
+        
+        if config.DEBUG:
+            self.questions = self.questions[:100]
 
-        self.max_question_length = len(max(self.questions.question,
-                                       key=lambda x: len(x.split())).split())
-        # print(self.max_question_length)
+        self.max_question_length = get_question_length(max(
+            self.questions.question,
+            key=get_question_length)
+        )
+        print(self.max_question_length)
         pass
 
     def __len__(self):
@@ -49,12 +55,12 @@ class VQADataset(Dataset):
             question = torch.LongTensor(self.question_vocab(question))
             question_padded = torch.zeros(self.max_question_length,
                                           dtype=question.dtype)
-            try:
-                question_padded[:len(question)] = question
-            except Exception as e:
+            # try:
+            question_padded[:len(question)] = question
+            # except Exception as e:
                 # print(e)
                 # print(question)
-                pass
+                # pass
 
         answer = row['most_picked_answer']
         # print(answer)
@@ -76,12 +82,14 @@ class VQADataset(Dataset):
 
 
 if __name__ == '__main__':
-    image_dir = os.path.join(config.DATASET_ROOT, 'train2014')
-    questions_file = './questions_subset_train.pkl'
-    questions_vocab_file = './questions_vocabulary_train.txt'
-    answers_vocab_file = './answers_vocabulary_train.txt'
+    phase = 'val'
+    image_dir = os.path.join(config.DATASET_ROOT, f'{phase}2014')
+    questions_file = f'./questions_subset_{phase}.pkl'
+    questions_vocab_file = f'./questions_vocabulary_{phase}.txt'
+    answers_vocab_file = f'./answers_vocabulary_{phase}.txt'
     vqadataset = VQADataset(image_dir,
                             questions_file,
                             questions_vocab_file,
-                            answers_vocab_file)
+                            answers_vocab_file,
+                            phase=phase)
     print(vqadataset.__getitem__(10))

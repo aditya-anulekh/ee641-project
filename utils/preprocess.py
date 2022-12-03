@@ -4,7 +4,9 @@ import re
 import json
 import pandas as pd
 from tqdm import tqdm
+# import config
 
+_dirname = os.path.dirname(os.path.realpath(__file__))
 
 # from .. import config
 
@@ -37,7 +39,7 @@ def generate_questions_csv(questions_file, annotations_file, phase):
 
         data.append(row)
     input_df = pd.DataFrame(data)
-    path_to_output = os.path.join('..', f'questions_{phase}.pkl')
+    path_to_output = os.path.join(_dirname, '..', f'questions_{phase}.pkl')
     input_df.to_pickle(path_to_output)
     return input_df, path_to_output
 
@@ -58,8 +60,10 @@ def generate_questions_vocab(dataset_df: pd.DataFrame, phase):
     # Insert unknown and pad tokens into the vocabulary
     vocabulary.insert(0, '<pad>')
     vocabulary.insert(1, '<unk>')
+    
+    path_to_output = os.path.join(_dirname, '..', f'questions_vocabulary_{phase}.txt')
 
-    with open(f'../questions_vocabulary_{phase}.txt', 'w') as f:
+    with open(path_to_output, 'w') as f:
         f.writelines([f"{w}\n" for w in vocabulary])
     return vocabulary
 
@@ -73,7 +77,10 @@ def generate_answers_vocab(dataset_df: pd.DataFrame,
     top_answers.sort()
     top_answers.insert(0, '<unk>')
     top_answers = top_answers[:num_answers]
-    with open(f'../answers_vocabulary_{phase}.txt', 'w') as f:
+
+    path_to_output = os.path.join(_dirname, '..', f'answers_vocabulary_{phase}.txt')
+
+    with open(path_to_output, 'w') as f:
         f.writelines([f"{ans}\n" for ans in top_answers])
     return top_answers
 
@@ -85,8 +92,18 @@ def get_answers_subset(questions_file: str, question_contents: str, phase: str):
         questions.question.str.contains(question_contents)
     ]
     questions.reset_index(drop=True, inplace=True)
-    questions.to_pickle(f"../questions_subset_{phase}.pkl")
+    
+    path_to_output = os.path.join(_dirname, '..', f'questions_subset_{phase}.pkl')
+    
+    questions.to_pickle(path_to_output)
     return questions
+
+
+def get_question_length(sentence):
+    SENTENCE_SPLIT_REGEX = re.compile(r'(\W+)')
+    sentence = SENTENCE_SPLIT_REGEX.split(sentence)
+    words = [w.strip() for w in sentence if len(w.strip()) > 0]
+    return len(words)
 
 
 class Vocabulary:
@@ -131,18 +148,16 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    phases = ['train']
+    phases = ['val']
 
     for phase in phases:
         _, output_file = generate_questions_csv(
             os.path.join(
-                '/study/1 USC/3 Fall 2022/EE641/Project/VQA_dataset/',
-                'v2_Questions_Train_mscoco',
-                'v2_OpenEnded_mscoco_train2014_questions.json'),
+                '/ee641-project/ee641-project/data',
+                'v2_OpenEnded_mscoco_val2014_questions.json'),
             os.path.join(
-                '/study/1 USC/3 Fall 2022/EE641/Project/VQA_dataset/',
-                'v2_Annotations_Train_mscoco',
-                'v2_mscoco_train2014_annotations.json'),
+                '/ee641-project/ee641-project/data',
+                'v2_mscoco_val2014_annotations.json'),
             phase
         )
         data = get_answers_subset(output_file, args.filter, phase)

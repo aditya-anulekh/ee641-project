@@ -2,11 +2,12 @@
 Configuration file to store global variables
 """
 
+import os
 import torch
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-DEBUG = True
+DEBUG = False
 LEARNING_RATE = 2e-4
-DATASET_ROOT = '/study/1 USC/3 Fall 2022/EE641/Project/VQA_dataset/'
+DATASET_ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
 QUESTION_VOCAB_SIZE = 2420
 ANSWERS_VOCAB_SIZE = 100
