@@ -9,8 +9,8 @@ from .question_encoder import (
 
 class VQAModel(nn.Module):
     def __init__(self,
-                 image_encoder=ImageEncoder(),
-                 question_encoder=QuestionEncoderLSTM(2420),
+                 image_encoder,
+                 question_encoder,
                  dropout_p=0.5,
                  fusion_hidden_units=1000,
                  n_answers=1000,

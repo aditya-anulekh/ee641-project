@@ -25,8 +25,8 @@ class ImageEncoder(nn.Module):
 
     def forward(self, x):
         # Extract features using the base model
-        with torch.no_grad():
-            x = self.base_model(x)
+        # with torch.no_grad():
+        x = self.base_model(x)
         x = self.fc(x)
 
         # Calculate the norm and divide the vector

@@ -5,6 +5,8 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from models.vqa_model import VQAModel
+from models.question_encoder import QuestionEncoderLSTM
+from models.image_encoder import ImageEncoder
 from dataset import VQADataset
 import config
 
@@ -37,10 +39,16 @@ def get_dataloaders():
 
 def train():
     # Define the model
-    model = VQAModel(n_answers=100)
+    image_encoder = ImageEncoder()
+    question_encoder = QuestionEncoderLSTM(config.QUESTION_VOCAB_SIZE)
+    model = VQAModel(
+        image_encoder=image_encoder,
+        question_encoder=question_encoder,
+        n_answers=config.ANSWERS_VOCAB_SIZE
+    )
     model = model.to(config.DEVICE)
 
-    optimizer_params = list(model.image_encoder.parameters()) + \
+    optimizer_params = list(model.image_encoder.fc.parameters()) + \
         list(model.question_encoder.parameters()) + \
         list(model.fc1.parameters()) + \
         list(model.fc2.parameters())

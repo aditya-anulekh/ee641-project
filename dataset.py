@@ -31,10 +31,6 @@ class VQADataset(Dataset):
 
         self.questions = pd.read_pickle(questions_file)
 
-        # Crop the dataset for debugging purposes
-        if config.DEBUG:
-            self.questions = self.questions[:100]
-
         self.max_question_length = len(max(self.questions.question,
                                        key=lambda x: len(x.split())).split())
         # print(self.max_question_length)

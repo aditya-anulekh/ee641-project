@@ -68,7 +68,7 @@ def generate_answers_vocab(dataset_df: pd.DataFrame,
                            num_answers: int,
                            phase: str):
     top_answers = dataset_df.most_picked_answer.value_counts().nlargest(
-        num_answers).index
+        min(num_answers, len(dataset_df))).index
     top_answers = top_answers.tolist()
     top_answers.sort()
     top_answers.insert(0, '<unk>')
