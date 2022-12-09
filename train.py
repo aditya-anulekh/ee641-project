@@ -1,4 +1,5 @@
 import os
+import pickle
 from tqdm import tqdm
 import torch
 import torch.nn as nn
@@ -11,6 +12,7 @@ from dataset import VQADataset
 import config
 
 print(f"Using {config.DEVICE}")
+
 
 def get_dataloaders():
     # TODO: Add datasets and dataloaders for validation
@@ -73,7 +75,14 @@ def train():
 
     phases = ['train', 'val']
 
-    for epoch in range(100):
+    metrics = {
+        'train_metrics': {'loss': [],
+                          'acc': []},
+        'val_metrics': {'loss': [],
+                        'acc': []}
+    }
+
+    for epoch in range(30):
         print(f"{epoch=}")
         for phase in phases:
             running_acc = 0
@@ -104,7 +113,16 @@ def train():
                         optimizer.step()
 
                 running_acc += sum(prediction.argmax(dim=1) == answer)
-            print(f"{phase}: At {batch_idx} of {epoch}. Accuracy = {running_acc/len(dataloaders[phase].dataset)}")
+            print(f"{phase}: At {batch_idx} of {epoch}. Accuracy = "
+                  f"{running_acc/len(dataloaders[phase].dataset)}")
+
+        # Save the model
+        torch.save(model.state_dict(), os.path.join(config.MODEL_DIR,
+                                                    f'cnn_lstm_{epoch}.pth'))
+        # Save metrics after each epoch
+        with open(f'metrics_{epoch}.pkl', 'wb') as file:
+            pickle.dump(metrics, file)
+
     return model
 
 
