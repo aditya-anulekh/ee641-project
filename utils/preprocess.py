@@ -148,7 +148,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    phases = ['val']
+    phases = ['train', 'val']
 
     for phase in phases:
         _, output_file = generate_questions_csv(

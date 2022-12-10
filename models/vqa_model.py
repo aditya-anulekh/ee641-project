@@ -1,6 +1,9 @@
 import torch
 import torch.nn as nn
-from .image_encoder import ImageEncoder
+from .image_encoder import (
+    ImageEncoder,
+    ImageEncoderTransformer
+)
 from .question_encoder import (
     QuestionEncoderLSTM,
     QuestionEncoderTransformer
@@ -38,5 +41,43 @@ class VQAModel(nn.Module):
         return fused_features
 
 
+class VQATransformer(nn.Module):
+    def __init__(self,
+                 image_encoder,
+                 question_encoder,
+                 n_answers=1000,
+                 intermediate_layer_size=1000,
+                 dropout=0.5):
+        super(VQATransformer, self).__init__()
+        self.image_encoder = image_encoder()
+        self.question_encoder = question_encoder()
+        self.n_answers = n_answers
+        self.intermediate_layers_size = intermediate_layer_size
+        self.dropout = dropout
+        fusion_size = self.image_encoder.model.config.hidden_size + \
+            self.question_encoder.model.config.hidden_size
+
+        self.fusion_layer = nn.Linear(fusion_size, intermediate_layer_size)
+        self.classification_layer = nn.Linear(intermediate_layer_size,
+                                              self.n_answers)
+
+    def forward(self, image, question):
+        image_features = self.image_encoder(image)['pooler_output']
+        question_features = self.question_encoder(question)['pooler_output']
+        fusion_features = torch.cat([
+            image_features,
+            question_features
+        ], dim=1)
+        fusion_features = self.fusion_layer(fusion_features)
+        fusion_features = self.classification_layer(fusion_features)
+        return fusion_features
+
+
 if __name__ == '__main__':
+    vqa = VQATransformer(ImageEncoderTransformer,
+                         QuestionEncoderTransformer)
+    output = vqa([torch.rand(3, 224, 224), torch.rand(3, 224, 224)],
+                 ["This is a test question", "This is another test question"])
+    print(output.shape)
+
     pass

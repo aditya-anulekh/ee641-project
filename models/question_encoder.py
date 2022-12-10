@@ -43,14 +43,19 @@ class QuestionEncoderTransformer(nn.Module):
 
     def forward(self, x):
         with torch.no_grad():
-            x = self.tokenizer(x, return_tensors='pt')
-            print(x)
+            x = self.tokenizer(x,
+                               return_tensors='pt',
+                               padding=True,
+                               truncation=True)
             x = self.model(**x, return_dict=True)
         return x
 
 
 if __name__ == '__main__':
-    qe = QuestionEncoderLSTM(2000)
-    # print(qe('This is a test sentence'))
-    print(qe(torch.LongTensor([[1, 2, 4, 5], [4, 3, 2, 9]])).shape)
+    # qe = QuestionEncoderLSTM(2000)
+    # print(qe(torch.LongTensor([[1, 2, 4, 5], [4, 3, 2, 9]])).shape)
+    qe = QuestionEncoderTransformer()
+    output = qe(['test sentence', 'another test sentence'])
+    print(output)
+
     pass

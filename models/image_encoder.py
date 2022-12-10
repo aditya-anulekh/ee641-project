@@ -4,6 +4,10 @@ import torch
 import torch.nn as nn
 from torchsummary import summary
 from torchvision.models import vgg19
+from transformers import (
+    ViTFeatureExtractor,
+    ViTModel
+)
 import config
 
 
@@ -35,8 +39,26 @@ class ImageEncoder(nn.Module):
         return x
 
 
+class ImageEncoderTransformer(nn.Module):
+    def __init__(self):
+        super(ImageEncoderTransformer, self).__init__()
+        self.feature_extractor = ViTFeatureExtractor.from_pretrained(
+            'google/vit-base-patch16-224-in21k')
+        self.model = ViTModel.from_pretrained(
+            'google/vit-base-patch16-224-in21k')
+
+    def forward(self, x):
+        with torch.no_grad():
+            x = self.feature_extractor([i for i in x],
+                                       return_tensors='pt')
+            x = self.model(**x)
+
+        return x
+
+
 if __name__ == "__main__":
-    img_encoder = ImageEncoder(pretrained=True)
-    print(summary(img_encoder.to(config.DEVICE), (3, 224, 224)))
+    img_encoder = ImageEncoderTransformer()
+    x = torch.rand((3, 3, 224, 224))
+    print(img_encoder(x))
     pass
 

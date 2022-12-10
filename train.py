@@ -82,7 +82,7 @@ def train():
                         'acc': []}
     }
 
-    for epoch in range(30):
+    for epoch in range(15):
         print(f"{epoch=}")
         for phase in phases:
             running_acc = 0
@@ -119,8 +119,12 @@ def train():
         # Save the model
         torch.save(model.state_dict(), os.path.join(config.MODEL_DIR,
                                                     f'cnn_lstm_{epoch}.pth'))
+
+        metric_file = os.path.join(config.MODEL_DIR,
+                                   'model.pkl')
+
         # Save metrics after each epoch
-        with open(f'metrics_{epoch}.pkl', 'wb') as file:
+        with open(metric_file, 'wb') as file:
             pickle.dump(metrics, file)
 
     return model

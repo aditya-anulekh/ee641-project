@@ -136,3 +136,5 @@ dmypy.json
 answers_vocabulary*.txt
 questions_vocabulary*.txt
 data/
+*.tar
+saved_models/
