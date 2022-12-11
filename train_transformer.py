@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision import transforms
+from transformers import ViTFeatureExtractor, BertTokenizer
 from models.vqa_model import VQATransformer
 from models.question_encoder import QuestionEncoderTransformer
 from models.image_encoder import ImageEncoderTransformer
@@ -14,7 +15,7 @@ import config
 
 def get_dataloaders():
     dataloaders = {}
-    phases = ['train', ]
+    phases = ['train', 'val']
 
     for phase in phases:
         image_dir = os.path.join(config.DATASET_ROOT, f'{phase}2014')
@@ -23,8 +24,8 @@ def get_dataloaders():
         image_transforms = transforms.Compose([
             transforms.Resize((224, 224)),
             transforms.ToTensor(),
-            transforms.Normalize((0.485, 0.456, 0.406),
-                                 (0.229, 0.224, 0.225)),
+            # transforms.Normalize((0.485, 0.456, 0.406),
+            #                      (0.229, 0.224, 0.225)),
         ])
         dataset = TransformerDataset(image_dir,
                                      questions_file,
@@ -34,7 +35,7 @@ def get_dataloaders():
         print(len(dataset))
         dataloader = DataLoader(
             dataset=dataset,
-            batch_size=4
+            batch_size=64
         )
         dataloaders.__setitem__(
             phase, dataloader
@@ -63,16 +64,16 @@ def train():
 
     dataloaders = get_dataloaders()
 
-    phases = ['train', ]
+    phases = ['train', 'val']
 
     metrics = {
-        'train_metrics': {'loss': [],
-                          'acc': []},
-        'val_metrics': {'loss': [],
-                        'acc': []}
+        'train': {'loss': [],
+                  'acc': []},
+        'val': {'loss': [],
+                'acc': []}
     }
 
-    for epoch in range(15):
+    for epoch in range(30):
         print(f"{epoch=}")
         for phase in phases:
             running_acc = 0
@@ -80,9 +81,10 @@ def train():
                     enumerate(dataloaders[phase]),
                     total=len(dataloaders[phase])):
                 # Move the inputs to cuda if available
-                image = image#.to(config.DEVICE)
-                question = question#.to(config.DEVICE)
-                answer = answer#.to(config.DEVICE)
+
+                image = image.to(config.DEVICE)
+                question = question.to(config.DEVICE)
+                answer = answer.to(config.DEVICE)
 
                 # Reset the optimizer
                 optimizer.zero_grad()
@@ -99,6 +101,7 @@ def train():
                 # Calculate loss and backprop
                 with torch.set_grad_enabled(phase == "train"):
                     loss = criterion(prediction, answer)
+                    loss = loss.to(config.DEVICE)
                     if phase == "train":
                         loss.backward()
                         optimizer.step()
@@ -107,17 +110,20 @@ def train():
             print(f"{phase}: At {batch_idx} of {epoch}. Accuracy = "
                   f"{running_acc / len(dataloaders[phase].dataset)}")
 
+            # Update metrics
+            metrics[phase]['loss'].append(loss)
+            metrics[phase]['acc'].append(running_acc)
+
         # Save the model
         torch.save(model.state_dict(), os.path.join(config.MODEL_DIR,
-                                                    f'cnn_lstm_{epoch}.pth'))
-
-        metric_file = os.path.join(config.MODEL_DIR,
-                                   'model.pkl')
+                                                    f'transformer_{epoch}.pth'))
 
         # Save metrics after each epoch
-        with open(metric_file, 'wb') as file:
-            pickle.dump(metrics, file)
+        metrics_location = os.path.join(config.MODEL_DIR, 
+                                        'transformer_metrics.pkl')
 
+        with open(metrics_location, 'wb') as file:
+            pickle.dump(metrics, file)
     return model
 
 

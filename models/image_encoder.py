@@ -42,16 +42,12 @@ class ImageEncoder(nn.Module):
 class ImageEncoderTransformer(nn.Module):
     def __init__(self):
         super(ImageEncoderTransformer, self).__init__()
-        self.feature_extractor = ViTFeatureExtractor.from_pretrained(
-            'google/vit-base-patch16-224-in21k')
         self.model = ViTModel.from_pretrained(
             'google/vit-base-patch16-224-in21k')
 
     def forward(self, x):
         with torch.no_grad():
-            x = self.feature_extractor([i for i in x],
-                                       return_tensors='pt')
-            x = self.model(**x)
+            x = self.model(**x, return_dict=True)
 
         return x
 

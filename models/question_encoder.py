@@ -38,15 +38,10 @@ class QuestionEncoderLSTM(nn.Module):
 class QuestionEncoderTransformer(nn.Module):
     def __init__(self):
         super(QuestionEncoderTransformer, self).__init__()
-        self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
         self.model = BertModel.from_pretrained('bert-base-uncased')
 
     def forward(self, x):
         with torch.no_grad():
-            x = self.tokenizer(x,
-                               return_tensors='pt',
-                               padding=True,
-                               truncation=True)
             x = self.model(**x, return_dict=True)
         return x
 

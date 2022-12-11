@@ -3,6 +3,7 @@ import re
 import pandas as pd
 import torch
 from torch.utils.data import Dataset
+from transformers import ViTFeatureExtractor, BertTokenizer
 from PIL import Image
 import config
 from utils.preprocess import Vocabulary, get_question_length
@@ -87,13 +88,15 @@ class TransformerDataset(Dataset):
                  questions_file,
                  answers_vocab_file,
                  transform=None,
-                 phase='train'):
+                 phase='train',
+                 return_raw=False):
 
         self.image_dir_root = image_dir_root
         self.questions_file = questions_file
         self.transform = transform
         self.phase = phase
         self.question_vocab = None
+        self.return_raw = return_raw
 
         with open(answers_vocab_file, 'r') as f:
             self.answers_master = f.readlines()
@@ -102,6 +105,13 @@ class TransformerDataset(Dataset):
                                enumerate(self.answers_master)}
 
         self.questions = pd.read_pickle(questions_file)
+        
+        self.feature_extractor = ViTFeatureExtractor(
+            mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225]).from_pretrained(
+            'google/vit-base-patch16-224-in21k')
+        self.question_tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+
 
         if config.DEBUG:
             self.questions = self.questions[:100]
@@ -134,19 +144,41 @@ class TransformerDataset(Dataset):
 
         if self.transform:
             image = self.transform(image)
-        return image, question, self.answers_tokens[answer]
+        
+        image_features = self.feature_extractor(image,
+                                                return_tensors='pt')
+        
+        image_features['pixel_values'] = image_features['pixel_values'].squeeze()
+        
+            
+        
+        question_features = self.question_tokenizer(question,
+                                                    return_tensors='pt',
+                                                    padding='max_length',
+                                                    truncation=True,
+                                                    max_length=24)
+
+        for key in question_features.keys():
+            question_features[key] = question_features[key].squeeze()
+            
+        if self.return_raw:        
+            return image_features, question_features, self.answers_tokens[answer], image, question
+        else:
+            return image_features, question_features, self.answers_tokens[answer]
 
     def __len__(self):
         return len(self.questions)
 
 
 if __name__ == '__main__':
-    phase = 'train'
+    phase = 'val'
+    dataset = 'rephrasings'
     image_dir = os.path.join(config.DATASET_ROOT, f'{phase}2014')
-    questions_file = f'./questions_subset_{phase}.pkl'
-    questions_vocab_file = f'./questions_vocabulary_{phase}.txt'
-    answers_vocab_file = f'./answers_vocabulary_{phase}.txt'
-    vqadataset = TransformerDataset(image_dir_root=image_dir,
+    questions_file = f'./questions_subset_{phase}_{dataset}.pkl'
+    questions_vocab_file = f'./questions_vocabulary_{phase}_{dataset}.txt'
+    answers_vocab_file = f'./answers_vocabulary_{phase}_{dataset}.txt'
+    vqadataset = VQADataset(image_dir_root=image_dir,
+                            tokenizer_source=questions_vocab_file,
                                     questions_file=questions_file,
                                     answers_vocab_file=answers_vocab_file,
                                     phase=phase)

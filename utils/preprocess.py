@@ -11,7 +11,7 @@ _dirname = os.path.dirname(os.path.realpath(__file__))
 # from .. import config
 
 
-def generate_questions_csv(questions_file, annotations_file, phase):
+def generate_questions_csv(questions_file, annotations_file, phase, dataset='vqa'):
     f1 = open(questions_file)
     questions_data = json.load(f1)
 
@@ -39,12 +39,12 @@ def generate_questions_csv(questions_file, annotations_file, phase):
 
         data.append(row)
     input_df = pd.DataFrame(data)
-    path_to_output = os.path.join(_dirname, '..', f'questions_{phase}.pkl')
+    path_to_output = os.path.join(_dirname, '..', f'questions_{phase}_{dataset}.pkl')
     input_df.to_pickle(path_to_output)
     return input_df, path_to_output
 
 
-def generate_questions_vocab(dataset_df: pd.DataFrame, phase):
+def generate_questions_vocab(dataset_df: pd.DataFrame, phase, dataset='vqa'):
     questions = dataset_df.question.tolist()
     vocabulary = set()
     SENTENCE_SPLIT_REGEX = re.compile(r'(\W+)')
@@ -61,7 +61,7 @@ def generate_questions_vocab(dataset_df: pd.DataFrame, phase):
     vocabulary.insert(0, '<pad>')
     vocabulary.insert(1, '<unk>')
     
-    path_to_output = os.path.join(_dirname, '..', f'questions_vocabulary_{phase}.txt')
+    path_to_output = os.path.join(_dirname, '..', f'questions_vocabulary_{phase}_{dataset}.txt')
 
     with open(path_to_output, 'w') as f:
         f.writelines([f"{w}\n" for w in vocabulary])
@@ -70,7 +70,8 @@ def generate_questions_vocab(dataset_df: pd.DataFrame, phase):
 
 def generate_answers_vocab(dataset_df: pd.DataFrame,
                            num_answers: int,
-                           phase: str):
+                           phase: str,
+                           dataset='vqa'):
     top_answers = dataset_df.most_picked_answer.value_counts().nlargest(
         min(num_answers, len(dataset_df))).index
     top_answers = top_answers.tolist()
@@ -78,14 +79,14 @@ def generate_answers_vocab(dataset_df: pd.DataFrame,
     top_answers.insert(0, '<unk>')
     top_answers = top_answers[:num_answers]
 
-    path_to_output = os.path.join(_dirname, '..', f'answers_vocabulary_{phase}.txt')
+    path_to_output = os.path.join(_dirname, '..', f'answers_vocabulary_{phase}_{dataset}.txt')
 
     with open(path_to_output, 'w') as f:
         f.writelines([f"{ans}\n" for ans in top_answers])
     return top_answers
 
 
-def get_answers_subset(questions_file: str, question_contents: str, phase: str):
+def get_answers_subset(questions_file: str, question_contents: str, phase: str, dataset='vqa'):
     questions = pd.read_pickle(questions_file)
     questions = questions.loc[
         questions.question_type.str.contains(question_contents) &
@@ -93,7 +94,7 @@ def get_answers_subset(questions_file: str, question_contents: str, phase: str):
     ]
     questions.reset_index(drop=True, inplace=True)
     
-    path_to_output = os.path.join(_dirname, '..', f'questions_subset_{phase}.pkl')
+    path_to_output = os.path.join(_dirname, '..', f'questions_subset_{phase}_{dataset}.pkl')
     
     questions.to_pickle(path_to_output)
     return questions
@@ -145,21 +146,24 @@ if __name__ == "__main__":
     # Add argument to select answer filter
     parser.add_argument('--filter', type=str, default='color',
                         help='Filter answers based on this')
+    
+    dataset='rephrasings'
 
     args = parser.parse_args()
 
-    phases = ['train', 'val']
+    phases = ['val']
 
     for phase in phases:
         _, output_file = generate_questions_csv(
             os.path.join(
-                '/ee641-project/ee641-project/data',
-                'v2_OpenEnded_mscoco_val2014_questions.json'),
+                '/ee641-project/ee641-project/data/vqa-rephrasings',
+                'v2_OpenEnded_mscoco_valrep2014_humans_og_questions.json'),
             os.path.join(
-                '/ee641-project/ee641-project/data',
-                'v2_mscoco_val2014_annotations.json'),
-            phase
+                '/ee641-project/ee641-project/data/vqa-rephrasings',
+                'v2_mscoco_valrep2014_humans_og_annotations.json'),
+            phase,
+            dataset
         )
-        data = get_answers_subset(output_file, args.filter, phase)
-        _ = generate_questions_vocab(data, phase)
-        _ = generate_answers_vocab(data, 100, phase)
+        data = get_answers_subset(output_file, args.filter, phase, dataset)
+        _ = generate_questions_vocab(data, phase, dataset)
+        _ = generate_answers_vocab(data, 100, phase, dataset)

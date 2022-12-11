@@ -64,6 +64,7 @@ class VQATransformer(nn.Module):
     def forward(self, image, question):
         image_features = self.image_encoder(image)['pooler_output']
         question_features = self.question_encoder(question)['pooler_output']
+
         fusion_features = torch.cat([
             image_features,
             question_features
