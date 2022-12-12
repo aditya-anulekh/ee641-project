@@ -79,3 +79,8 @@ python main.py "/ee641-project/ee641-project/data/train2014/COCO_train2014_00000
 |CNN + LSTM | 578 MB |
 |ViT + BERT | 754 MB |
 |Finetuned CNN + LSTM | 578 MB |
+
+## Members - Group 8
+* Aditya Anulekh Mantri - adityaan@usc.edu
+* Surya Teja CVN - suryatej@usc.edu
+* Shoumik Nandi - shoumikn@usc.edu
