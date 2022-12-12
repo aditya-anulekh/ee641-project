@@ -10,6 +10,7 @@
     * `plots/baseline_outputs`
     * `plots/rephrasings_outputs`
     * `saved_models/`
+* The script will also install all the required packages in your current environment. (**NOTE:This script will not create an environment. Make sure to create one if required**)
 
 ```bash
 bash prerun.sh
@@ -69,3 +70,12 @@ python main.py "/ee641-project/ee641-project/data/train2014/COCO_train2014_00000
 ### IPython Widgets
 
 * Run the `main.ipynb` notebook to use the GUI to upload an image and question.
+
+
+## Model sizes
+
+|Model|Size|
+|:--:|:--:|
+|CNN + LSTM | 578 MB |
+|ViT + BERT | 754 MB |
+|Finetuned CNN + LSTM | 578 MB |
